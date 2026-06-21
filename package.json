@@ -1,0 +1,11 @@
+{
+  "name": "cineshelf",
+  "version": "1.0.0",
+  "description": "Personal Movie Catalog and Recommendation Hub",
+  "scripts": {
+    "dev": "npx -y http-server . -p 3000"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

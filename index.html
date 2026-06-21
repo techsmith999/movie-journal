@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineShelf - Curated Movies & Series Catalog</title>
+  <meta name="description" content="Explore my ultimate watch log of movies and series. Filter by Horror, Thriller, Action, War, and find your next watch recommendation.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Header -->
+  <header>
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+      <button class="btn-icon" id="menu-toggle-btn" title="Open filters menu">
+        <svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:currentColor;">
+          <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+        </svg>
+      </button>
+      <div class="logo" id="logo-btn">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"/>
+        </svg>
+        Cine<span>Shelf</span>
+      </div>
+    </div>
+    
+    <div class="nav-actions">
+      <div id="admin-badge-container">
+        <!-- Floating admin badge rendered by JS when logged in -->
+      </div>
+
+      <button class="btn btn-primary" id="add-movie-btn" style="display: none;">
+        <svg style="width:16px;height:16px;fill:currentColor;" viewBox="0 0 24 24">
+          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+        </svg>
+        Add Recommendation
+      </button>
+      <button class="btn btn-secondary" id="change-passcode-btn" style="display: none;">
+        Change Passcode
+      </button>
+      <button class="btn btn-secondary" id="admin-logout-btn" style="display: none;">
+        Logout
+      </button>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-subtitle">My Personal Cinema Journal</div>
+      <h2>Every Movie I've Ever Watched</h2>
+      <p class="hero-description">
+        Looking for something to watch? Explore my hand-picked ratings and authentic reviews spanning spine-chilling horror, edge-of-your-seat thrillers, high-octane action, epic war sagas, and binge-worthy series.
+      </p>
+      
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="search-input" placeholder="Search by title, director, cast...">
+      </div>
+
+      <div class="hero-actions">
+        <button class="btn btn-primary" id="surprise-btn">
+          <span>Surprise Me</span> 🎲
+        </button>
+        <button class="btn btn-secondary" id="export-btn" style="display: none;">
+          Export Library (JSON)
+        </button>
+        <button class="btn btn-secondary" id="import-btn-trigger" style="display: none;">
+          Import Library
+        </button>
+        <input type="file" id="import-file" accept=".json" style="display: none;">
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats Bar -->
+  <section class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-number" id="stat-total">0</div>
+      <div class="stat-label">Total Watched</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" id="stat-avg-rating">0.0</div>
+      <div class="stat-label">Average Rating</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" id="stat-movies">0</div>
+      <div class="stat-label">Movies</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" id="stat-series">0</div>
+      <div class="stat-label">Series</div>
+    </div>
+  </section>
+
+  <!-- Drawer Backdrop -->
+  <div class="drawer-backdrop" id="sidebar-backdrop"></div>
+
+  <!-- Main Container -->
+  <main class="container">
+    <div class="catalog-layout">
+      
+      <!-- Sidebar Filters -->
+      <aside class="sidebar">
+        <!-- Mobile Sidebar Header -->
+        <div class="sidebar-header-mobile">
+          <span>Filters & Genres</span>
+          <button class="modal-close" id="sidebar-close-btn">
+            <svg style="width:20px;height:20px;fill:currentColor;" viewBox="0 0 24 24">
+              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
+            </svg>
+          </button>
+        </div>
+        <!-- Type Filter -->
+        <div class="filter-section">
+          <div class="filter-title">Category</div>
+          <div class="filter-options" id="type-filters">
+            <button class="filter-chip active" data-type="all">
+              <span>All Titles</span>
+              <span class="filter-chip-count" id="count-all">0</span>
+            </button>
+            <button class="filter-chip" data-type="movie">
+              <span>Movies</span>
+              <span class="filter-chip-count" id="count-movies">0</span>
+            </button>
+            <button class="filter-chip" data-type="series">
+              <span>Series</span>
+              <span class="filter-chip-count" id="count-series">0</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Genre Filter -->
+        <div class="filter-section">
+          <div class="filter-title">Genres</div>
+          <div class="filter-options" id="genre-filters">
+            <button class="filter-chip active" data-genre="all">
+              <span>All Genres</span>
+              <span class="filter-chip-count" id="genre-count-all">0</span>
+            </button>
+            <button class="filter-chip" data-genre="horror">
+              <span>Horror</span>
+              <span class="filter-chip-count" id="genre-count-horror">0</span>
+            </button>
+            <button class="filter-chip" data-genre="thriller">
+              <span>Thriller</span>
+              <span class="filter-chip-count" id="genre-count-thriller">0</span>
+            </button>
+            <button class="filter-chip" data-genre="action">
+              <span>Action</span>
+              <span class="filter-chip-count" id="genre-count-action">0</span>
+            </button>
+            <button class="filter-chip" data-genre="war">
+              <span>War</span>
+              <span class="filter-chip-count" id="genre-count-war">0</span>
+            </button>
+            <button class="filter-chip" data-genre="sci-fi">
+              <span>Sci-Fi</span>
+              <span class="filter-chip-count" id="genre-count-scifi">0</span>
+            </button>
+            <button class="filter-chip" data-genre="drama">
+              <span>Drama</span>
+              <span class="filter-chip-count" id="genre-count-drama">0</span>
+            </button>
+            <button class="filter-chip" data-genre="mystery">
+              <span>Mystery</span>
+              <span class="filter-chip-count" id="genre-count-mystery">0</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Progress Filter -->
+        <div class="filter-section" id="progress-filter-section">
+          <div class="filter-title">My Progress</div>
+          <div class="filter-options">
+            <button class="filter-chip" id="exclude-watched-btn">
+              <span>Hide My Watched</span>
+              <span class="filter-chip-count" id="watched-count">0</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Grid Content -->
+      <section class="content-area">
+        <div class="content-header">
+          <div class="content-title">
+            <h3 id="display-title">All Recommendations</h3>
+            <p><span id="results-count">0</span> titles match your filters</p>
+          </div>
+          <div>
+            <select class="sort-select" id="sort-select">
+              <option value="rating-desc">Highest Rated First</option>
+              <option value="personal-desc">Personal Rating (High-Low)</option>
+              <option value="year-desc">Release Year (Newest)</option>
+              <option value="year-asc">Release Year (Oldest)</option>
+              <option value="title-asc">Title (A-Z)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="movie-grid" id="movie-grid">
+          <!-- Movie cards rendered dynamically -->
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-content">
+      <div class="footer-logo">Cine<span>Shelf</span></div>
+      <p class="footer-text">
+        CineShelf is a personal diary of cinematic experiences. All reviews and ratings represent the owner's subjective opinion.
+      </p>
+      <p class="footer-credits" id="curator-trigger" style="cursor: default; user-select: none;">
+        &copy; CineShelf. Designed & Built for cinema enthusiasts. Powered by Local Storage.
+      </p>
+    </div>
+  </footer>
+
+  <!-- DETAIL MODAL -->
+  <div class="modal" id="detail-modal">
+    <div class="modal-backdrop" id="detail-modal-close-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="detail-modal-header-title">Movie Details</h3>
+        <button class="modal-close" id="detail-modal-close-btn">
+          <svg style="width:24px;height:24px;fill:currentColor;" viewBox="0 0 24 24">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-modal-layout">
+          <div>
+            <img src="" alt="" class="detail-poster" id="detail-poster">
+          </div>
+          <div class="detail-info">
+            <h4 class="detail-title" id="detail-title">Movie Title</h4>
+            
+            <div class="detail-meta-row">
+              <span class="type-badge" id="detail-type-badge">Movie</span>
+              <span id="detail-year">2024</span>
+              <span>&bull;</span>
+              <span id="detail-director-label">Director: <strong id="detail-director">George Miller</strong></span>
+            </div>
+
+            <div class="card-genres" id="detail-genres">
+              <!-- Genres dynamically added -->
+            </div>
+
+            <div class="detail-ratings">
+              <div class="detail-rating-box">
+                <span class="detail-rating-title">CineScore</span>
+                <span class="detail-rating-val"><span id="detail-personal-rating">9.5</span>/10</span>
+              </div>
+              <div class="detail-rating-box">
+                <span class="detail-rating-title">Public Rating</span>
+                <span class="detail-rating-val" style="color:var(--text-muted);">
+                  <svg style="width:14px;height:14px;fill:var(--primary-accent);margin-right:2px;" viewBox="0 0 24 24">
+                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                  </svg>
+                  <span id="detail-public-rating" style="color: #fff;">8.1</span>/10
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <div class="detail-section-title">Cast</div>
+              <p id="detail-cast" style="font-size:0.9rem; color:var(--text-main);"></p>
+            </div>
+
+            <div>
+              <div class="detail-section-title">My Review</div>
+              <p class="detail-review" id="detail-review"></p>
+            </div>
+
+            <div id="detail-link-container" style="margin-top:0.5rem;">
+              <a href="#" target="_blank" class="btn btn-primary" id="detail-trailer-btn">
+                <svg style="width:16px;height:16px;fill:currentColor;" viewBox="0 0 24 24">
+                  <path d="M10 8.64L15.27 12 10 15.36V8.64M8 5v14l11-7L8 5z"/>
+                </svg>
+                Watch Trailer / Info
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN LOGIN MODAL -->
+  <div class="modal" id="login-modal">
+    <div class="modal-backdrop" id="login-modal-close-backdrop"></div>
+    <div class="modal-content passcode-modal">
+      <div class="modal-header">
+        <h3>Curator Authentication</h3>
+        <button class="modal-close" id="login-modal-close-btn">
+          <svg style="width:24px;height:24px;fill:currentColor;" viewBox="0 0 24 24">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
+          </svg>
+        </button>
+      </div>
+      <form id="login-form">
+        <div class="modal-body">
+          <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:1rem;">
+            Enter the passcode to enable curator mode. You'll be able to add, edit, and delete recommendations.
+          </p>
+          <div class="form-group">
+            <label for="passcode-input">Passcode</label>
+            <input type="password" id="passcode-input" class="form-control" placeholder="••••" required>
+            <small style="color:var(--text-muted);margin-top:0.5rem;display:block;">Try typing: <strong>admin</strong></small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="login-modal-cancel-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Authenticate</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MOVIE EDITOR MODAL -->
+  <div class="modal" id="edit-modal">
+    <div class="modal-backdrop" id="edit-modal-close-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="edit-modal-title">Add Recommendation</h3>
+        <button class="modal-close" id="edit-modal-close-btn">
+          <svg style="width:24px;height:24px;fill:currentColor;" viewBox="0 0 24 24">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
+          </svg>
+        </button>
+      </div>
+      <form id="edit-movie-form">
+        <input type="hidden" id="edit-movie-id">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="edit-title">Title</label>
+            <input type="text" id="edit-title" class="form-control" placeholder="e.g., The Dark Knight" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="edit-year">Release Year</label>
+              <input type="number" id="edit-year" class="form-control" placeholder="e.g., 2008" min="1880" max="2100" required>
+            </div>
+            <div class="form-group">
+              <label for="edit-type">Category</label>
+              <select id="edit-type" class="form-control" required>
+                <option value="movie">Movie</option>
+                <option value="series">Series</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Genres</label>
+            <div class="genre-grid-selection" id="edit-genres-container">
+              <label class="genre-checkbox-label">
+                <input type="checkbox" value="horror"> Horror
+              </label>
+              <label class="genre-checkbox-label">
+                <input type="checkbox" value="thriller"> Thriller
+              </label>
+              <label class="genre-checkbox-label">
+                <input type="checkbox" value="action"> Action
+              </label>
+              <label class="genre-checkbox-label">
+                <input type="checkbox" value="war"> War
+              </label>
+              <label class="genre-checkbox-label">
+                <input type="checkbox" value="sci-fi"> Sci-Fi
+              </label>
+              <label class="genre-checkbox-label">
+                <input type="checkbox" value="drama"> Drama
+              </label>
+              <label class="genre-checkbox-label">
+                <input type="checkbox" value="mystery"> Mystery
+              </label>
+              <label class="genre-checkbox-label">
+                <input type="checkbox" value="history"> History
+              </label>
+              <label class="genre-checkbox-label">
+                <input type="checkbox" value="crime"> Crime
+              </label>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="edit-personal-rating">CineScore (Your Rating 1-10)</label>
+              <input type="number" id="edit-personal-rating" class="form-control" placeholder="e.g., 9.5" step="0.1" min="1" max="10" required>
+            </div>
+            <div class="form-group">
+              <label for="edit-rating">Public Rating (IMDb/TMDB 1-10)</label>
+              <input type="number" id="edit-rating" class="form-control" placeholder="e.g., 8.8" step="0.1" min="1" max="10" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="edit-director">Director</label>
+            <input type="text" id="edit-director" class="form-control" placeholder="e.g., Christopher Nolan" required>
+          </div>
+
+          <div class="form-group">
+            <label for="edit-cast">Cast Members (comma separated)</label>
+            <input type="text" id="edit-cast" class="form-control" placeholder="e.g., Christian Bale, Heath Ledger, Gary Oldman">
+          </div>
+
+          <div class="form-group">
+            <label for="edit-cover">Cover Image URL</label>
+            <input type="url" id="edit-cover" class="form-control" placeholder="https://example.com/poster.jpg">
+            <small style="color:var(--text-muted);display:block;margin-top:0.25rem;">Leave empty for an automatic genre-based theme poster.</small>
+          </div>
+
+          <div class="form-group">
+            <label for="edit-link">Trailer / Info Link (URL)</label>
+            <input type="url" id="edit-link" class="form-control" placeholder="https://youtube.com/watch?v=...">
+          </div>
+
+          <div class="form-group">
+            <label for="edit-review">My Personal Review / Thoughts</label>
+            <textarea id="edit-review" class="form-control" rows="4" placeholder="Write your authentic thoughts about this movie..." required></textarea>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="edit-modal-cancel-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="save-movie-btn">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CHANGE PASSCODE MODAL -->
+  <div class="modal" id="passcode-modal">
+    <div class="modal-backdrop" id="passcode-modal-close-backdrop"></div>
+    <div class="modal-content passcode-modal">
+      <div class="modal-header">
+        <h3>Change Curator Passcode</h3>
+        <button class="modal-close" id="passcode-modal-close-btn">
+          <svg style="width:24px;height:24px;fill:currentColor;" viewBox="0 0 24 24">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
+          </svg>
+        </button>
+      </div>
+      <form id="change-passcode-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="current-passcode-input">Current Passcode</label>
+            <input type="password" id="current-passcode-input" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="new-passcode-input">New Passcode</label>
+            <input type="password" id="new-passcode-input" class="form-control" placeholder="Enter new strong passcode" required>
+          </div>
+          <div class="form-group">
+            <label for="confirm-passcode-input">Confirm New Passcode</label>
+            <input type="password" id="confirm-passcode-input" class="form-control" placeholder="Confirm new passcode" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="passcode-modal-cancel-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Update Passcode</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Include JavaScript Files -->
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
